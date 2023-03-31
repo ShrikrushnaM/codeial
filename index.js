@@ -1,14 +1,14 @@
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const app = express();
-
 const port = 8000;
 const expressLayouts = require("express-ejs-layouts");
 const db = require("./config/mongoose");
+// used for session cookie
 const session = require("express-session");
 const passport = require("passport");
-const passportLocal = require("./config/passport-local");
-const MongoStore = require("connect-mongo")(session);
+const passportLocal = require("./config/passport-local-strategy");
+const MongoStore = new require("connect-mongo")(session);
 const sassMiddleware = require("node-sass-middleware");
 
 app.use(
@@ -20,7 +20,6 @@ app.use(
     prefix: "/css",
   })
 );
-
 app.use(express.urlencoded());
 
 app.use(cookieParser());
@@ -28,20 +27,20 @@ app.use(cookieParser());
 app.use(express.static("./assets"));
 
 app.use(expressLayouts);
-
-//extract sytle and script from sub pages into layouts
+// extract style and scripts from sub pages into the layout
 app.set("layout extractStyles", true);
 app.set("layout extractScripts", true);
 
-//set up the view engine and views
+// set up the view engine
 app.set("view engine", "ejs");
 app.set("views", "./views");
 
-//mongo store is used to store the session cookie in the db
+// mongo store is used to store the session cookie in the db
 app.use(
   session({
     name: "codeial",
-    secret: "blansdjdc",
+    // TODO change the secret before deployment in production mode
+    secret: "blahsomething",
     saveUninitialized: false,
     resave: false,
     cookie: {
@@ -53,7 +52,7 @@ app.use(
         autoRemove: "disabled",
       },
       function (err) {
-        console.log(err || "connect-mongoo setup OKK");
+        console.log(err || "connect-mongodb setup ok");
       }
     ),
   })
@@ -64,13 +63,13 @@ app.use(passport.session());
 
 app.use(passport.setAuthenticatedUser);
 
-//use express router
-app.use("/", require("./routes/index"));
+// use express router
+app.use("/", require("./routes"));
 
-app.listen(port, (err) => {
+app.listen(port, function (err) {
   if (err) {
-    console.log(`Error: ${err}`);
-  } else {
-    console.log(`Server is running on port ${port}`);
+    console.log(`Error in running the server: ${err}`);
   }
+
+  console.log(`Server is running on port: ${port}`);
 });
